@@ -43,6 +43,12 @@
 
 * { margin: 0; box-sizing: border-box; }
 
+/* Dos mecanismos de zoom de iOS, apagados los dos: el de FOCO se dispara con
+   cualquier campo de letra <16px (por eso el mínimo global), y el de DOBLE
+   TAP lo corta touch-action. El zoom manual de pellizco sigue andando. */
+input, select, button { touch-action: manipulation; }
+input { font-size: max(16px, 1em); }
+
 html, body { height: 100%; }
 
 body {
@@ -100,7 +106,7 @@ header {
   background: var(--hundido);
   color: var(--tinta);
   font: inherit;
-  font-size: 13px;
+  font-size: 16px;
   padding: 6px 8px;
 }
 
@@ -311,3 +317,6 @@ footer {
 }
 
 .error { color: var(--error); font-size: 14px; text-align: center; }
+
+.version { font-size: 11px; color: var(--tinta2); }
+.version.centrada { text-align: center; margin-top: 8px; }

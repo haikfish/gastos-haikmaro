@@ -18,6 +18,10 @@ import { clasificar, encolar, leerCola, sacarDeCola, type GastoEnCola } from './
 import { aNumero, conMiles } from './logica/dinero'
 import { subirGasto, supabase, traerCategorias, type Categoria } from './buzon'
 
+//: Sube con cada publicación. Está EN PANTALLA (header y login) porque la
+//: pregunta «¿te llegó la versión nueva?» no se puede responder de otra forma.
+const VERSION = 'v3'
+
 type Tipo = 'HAIKMARO' | 'FAMILIAR'
 /** null = «Sin categoría» elegida a propósito; undefined = nada elegido aún. */
 type Eleccion = number | null | undefined
@@ -94,6 +98,7 @@ function Entrar() {
         {entrando ? 'Entrando…' : 'Entrar'}
       </button>
       {/* La sesión persiste: esto se hace una vez por teléfono. */}
+      <p className="version centrada">{VERSION}</p>
     </form>
   )
 }
@@ -222,6 +227,7 @@ function Carga() {
         <button type="button" className="salir" onClick={() => void supabase.auth.signOut()}>
           salir
         </button>
+        <span className="version">{VERSION}</span>
       </header>
 
       <div className="tipos">

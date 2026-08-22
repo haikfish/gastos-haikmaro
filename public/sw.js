@@ -10,7 +10,7 @@
  *   app ya maneja la falta de red, y cachear respuestas de datos mentiría.
  */
 
-const CACHE = 'gastos-v1'
+const CACHE = 'gastos-v2'
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(
@@ -35,7 +35,10 @@ self.addEventListener('fetch', (evento) => {
 
   if (pedido.mode === 'navigate') {
     evento.respondWith(
-      fetch(pedido)
+      // no-cache: revalida contra el servidor en vez de aceptar el caché HTTP
+      // de Pages (10 minutos). Sin esto, una versión nueva tardaba hasta 10
+      // minutos en llegar al teléfono y no había forma de saberlo.
+      fetch(pedido, { cache: 'no-cache' })
         .then((r) => {
           const copia = r.clone()
           void caches.open(CACHE).then((c) => c.put('./', copia))
