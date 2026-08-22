@@ -20,6 +20,9 @@ export type GastoEnCola = {
   categoria_id: number | null
   monto: number
   fecha: string
+  /** Opcional: solo viaja si se escribió. JSON.stringify omite undefined, así
+   *  que un buzón sin la columna ni se entera de que la app la conoce. */
+  notas?: string
 }
 
 export type Deposito = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>

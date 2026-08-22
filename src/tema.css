@@ -195,6 +195,19 @@ footer {
   gap: 10px;
 }
 
+.nota {
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: white;
+  color: var(--tinta);
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+}
+
+.nota::placeholder { color: var(--tinta2); }
+.nota:focus { outline: 2px solid var(--dorado); border-color: var(--dorado); }
+
 .monto-fila {
   display: flex;
   align-items: baseline;

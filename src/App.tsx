@@ -100,7 +100,7 @@ function Entrar() {
 
 // --- La pantalla de carga -------------------------------------------------------
 
-type Borrador = { tipo: Tipo; eleccion: Eleccion; monto: string; fecha: string }
+type Borrador = { tipo: Tipo; eleccion: Eleccion; monto: string; fecha: string; nota: string }
 type CategoriasGuardadas = { filas: Categoria[]; el: string }
 
 function Carga() {
@@ -109,6 +109,7 @@ function Carga() {
   const [eleccion, setEleccion] = useState<Eleccion>(borradorInicial?.eleccion)
   const [monto, setMonto] = useState(borradorInicial?.monto ?? '')
   const [fecha, setFecha] = useState(borradorInicial?.fecha ?? hoy())
+  const [nota, setNota] = useState(borradorInicial?.nota ?? '')
 
   const guardadas = useRef(leerJson<CategoriasGuardadas>('gastos-categorias')).current
   const [categorias, setCategorias] = useState<Categoria[]>(guardadas?.filas ?? [])
@@ -130,8 +131,8 @@ function Carga() {
 
   // El borrador: cada tecla queda en el teléfono.
   useEffect(() => {
-    localStorage.setItem('gastos-borrador', JSON.stringify({ tipo, eleccion, monto, fecha }))
-  }, [tipo, eleccion, monto, fecha])
+    localStorage.setItem('gastos-borrador', JSON.stringify({ tipo, eleccion, monto, fecha, nota }))
+  }, [tipo, eleccion, monto, fecha, nota])
 
   // La cola se intenta vaciar al abrir y cada vez que vuelve la señal.
   useEffect(() => {
@@ -168,6 +169,8 @@ function Carga() {
       categoria_id: eleccion,
       monto: numero,
       fecha,
+      // Solo si se escribió: sin nota no viaja la clave siquiera.
+      notas: nota.trim() || undefined,
     }
 
     // A la cola PRIMERO: desde acá, pase lo que pase, el gasto existe.
@@ -182,6 +185,7 @@ function Carga() {
     // La pantalla queda lista para el siguiente ANTES de esperar la red.
     setEleccion(undefined)
     setMonto('')
+    setNota('')
     setFecha(hoy())
     localStorage.removeItem('gastos-borrador')
 
@@ -272,6 +276,16 @@ function Carga() {
         {categoriasDe === null && categorias.length === 0 && (
           <p className="aviso error">Sin categorías todavía: abrila una vez con señal.</p>
         )}
+        {/* La nota es lo único opcional de la pantalla y se ve como tal:
+            chica, arriba del monto, sin robar protagonismo. */}
+        <input
+          className="nota"
+          placeholder="Nota (opcional)"
+          maxLength={200}
+          autoComplete="off"
+          value={nota}
+          onChange={(e) => setNota(e.target.value)}
+        />
         <div className="monto-fila">
           <input
             className="monto"
