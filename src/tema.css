@@ -1,0 +1,299 @@
+/* La estética del sistema de precios, en una pantalla de celular.
+   Dorado #cc9966, marfil #fdfaf6, Cormorant Garamond para la marca,
+   Inter para todo lo funcional. Sin sombras, sin gradientes, sin
+   animaciones — salvo UNA: el aviso de guardado, que se desvanece solo
+   y su fin es lo que lo limpia de la pantalla. */
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fuentes/Inter-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fuentes/Inter-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/fuentes/CormorantGaramond-500.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/fuentes/CormorantGaramond-600.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+
+:root {
+  --dorado: #cc9966;
+  --dorado-oscuro: #b8875a;
+  --marfil: #fdfaf6;
+  --hundido: #f7f0e8;   /* el brand-bg del sistema de precios */
+  --tinta: #33302c;
+  --tinta2: #8a8378;
+  --linea: #e8e0d4;
+  --ok: #2e7d4f;
+  --error: #b3402a;
+}
+
+* { margin: 0; box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--marfil);
+  color: var(--tinta);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+#raiz { height: 100%; }
+
+/* ---- La pantalla: cuatro franjas, solo la de categorías scrollea ---- */
+
+.app {
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  /* minmax(0,1fr) y no el implícito: sin esto, el ancho intrínseco del campo
+     de monto (34px de fuente × el size por defecto de un input) infla la
+     columna a 509px y la pantalla scrollea de costado. Medido, no teórico. */
+  grid-template-columns: minmax(0, 1fr);
+  /* El notch y la barra del sistema no pisan nada. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 8px;
+}
+
+.marca {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  margin-right: auto;
+}
+
+.marca small {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--dorado);
+  vertical-align: 3px;
+}
+
+.fecha {
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: var(--hundido);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+.salir {
+  border: none;
+  background: none;
+  color: var(--tinta2);
+  font: inherit;
+  font-size: 13px;
+  padding: 6px;
+}
+
+/* ---- Tipo ---- */
+
+.tipos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px 16px 10px;
+}
+
+.tipo {
+  min-height: 48px;
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: white;
+  color: var(--tinta);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.tipo.elegido {
+  background: var(--dorado);
+  border-color: var(--dorado);
+  color: white;
+}
+
+/* ---- Categorías: la única zona que scrollea ---- */
+
+.categorias {
+  /* min-height 0: una fila 1fr de grilla no achica por debajo de su contenido
+     salvo que se lo permitas, y sin esto las 26 categorías estiraban la
+     página a 1102px — la página scrolleaba en vez de scrollear esta zona. */
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-content: start;
+  padding: 2px 16px 12px;
+}
+
+.categoria {
+  min-height: 52px;
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: white;
+  color: var(--tinta);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.2;
+  padding: 6px 10px;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+.categoria.elegida {
+  background: var(--dorado);
+  border-color: var(--dorado);
+  color: white;
+  font-weight: 500;
+}
+
+.sin-cat {
+  grid-column: 1 / -1;
+  min-height: 44px;
+  background: var(--hundido);
+  border-style: dashed;
+  color: var(--tinta2);
+}
+
+.sin-cat.elegida { color: white; border-style: solid; }
+
+/* ---- El pie: monto y guardar, en la zona del pulgar ---- */
+
+footer {
+  padding: 10px 16px calc(14px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--linea);
+  background: var(--marfil);
+  display: grid;
+  gap: 10px;
+}
+
+.monto-fila {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.monto {
+  /* width 0 + flex 1: el ancho lo da el flex, no el intrínseco del input. */
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  background: var(--hundido);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 34px;
+  font-weight: 500;
+  text-align: right;
+  padding: 10px 14px;
+}
+
+.monto:focus { outline: 2px solid var(--dorado); border-color: var(--dorado); }
+
+.pesos { color: var(--tinta2); font-size: 15px; }
+
+.boton-guardar {
+  min-height: 58px;
+  border: none;
+  border-radius: 12px;
+  background: var(--dorado);
+  color: white;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.boton-guardar:active { background: var(--dorado-oscuro); }
+.boton-guardar:disabled { background: var(--linea); color: var(--tinta2); }
+
+/* ---- Avisos ---- */
+
+.aviso {
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.aviso.ok {
+  background: #edf6f0;
+  color: var(--ok);
+  /* Se va sola; el onAnimationEnd la saca del DOM. */
+  animation: desvanecer 3.5s forwards;
+}
+
+.aviso.cola { background: var(--hundido); color: var(--tinta); }
+.aviso.error { background: #fbeeea; color: var(--error); }
+
+@keyframes desvanecer {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ---- Login ---- */
+
+.entrar {
+  min-height: 100dvh;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.entrar h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 40px;
+  text-align: center;
+}
+
+.subtitulo {
+  text-align: center;
+  color: var(--dorado);
+  letter-spacing: 0.3em;
+  font-size: 12px;
+  margin: -8px 0 16px;
+}
+
+.entrar input {
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: var(--hundido);
+  font: inherit;
+  font-size: 16px;
+  padding: 14px;
+}
+
+.error { color: var(--error); font-size: 14px; text-align: center; }
