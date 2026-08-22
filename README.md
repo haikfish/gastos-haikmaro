@@ -25,8 +25,11 @@ npm test        # la lógica: formato de dinero y cola offline
 npm run dev
 ```
 
-Usuario de prueba del buzón: `prueba@ejemplo.com` (se elimina al terminar el
-desarrollo; el import ignora sus gastos).
+El usuario de prueba del desarrollo (`prueba@ejemplo.com`) fue eliminado al
+terminar. Para desarrollar de nuevo contra el buzón: crear uno igual en el
+panel (Authentication → Add user, con Auto Confirm) — el import del sistema de
+precios ignora sus gastos por nombre, así que probar nunca ensucia la
+contabilidad.
 
 ## Las piezas
 
