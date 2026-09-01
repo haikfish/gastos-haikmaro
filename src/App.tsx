@@ -110,7 +110,6 @@ type Borrador = {
   tipo: Tipo
   eleccion: Eleccion
   monto: string
-  fecha: string
   nota: string
   pago?: Pago
   tarjetaId?: number | null
@@ -123,7 +122,11 @@ function Carga() {
   const [tipo, setTipo] = useState<Tipo>(borradorInicial?.tipo ?? 'HAIKMARO')
   const [eleccion, setEleccion] = useState<Eleccion>(borradorInicial?.eleccion)
   const [monto, setMonto] = useState(borradorInicial?.monto ?? '')
-  const [fecha, setFecha] = useState(borradorInicial?.fecha ?? hoy())
+  // La fecha arranca en HOY siempre — nunca en la del borrador. El borrador
+  // conserva monto, nota y categoría a medio tipear, pero una fecha vieja
+  // restaurada es el error clásico: gastos cargados con el día que quedó de
+  // la última vez sin que se note (lo cazó el dueño el 02/09/2026).
+  const [fecha, setFecha] = useState(hoy())
   const [nota, setNota] = useState(borradorInicial?.nota ?? '')
   const [pago, setPago] = useState<Pago>(borradorInicial?.pago ?? 'CONTADO')
   const [tarjetaId, setTarjetaId] = useState<number | null>(borradorInicial?.tarjetaId ?? null)
@@ -161,9 +164,30 @@ function Carga() {
   useEffect(() => {
     localStorage.setItem(
       'gastos-borrador',
-      JSON.stringify({ tipo, eleccion, monto, fecha, nota, pago, tarjetaId, cuotas }),
+      JSON.stringify({ tipo, eleccion, monto, nota, pago, tarjetaId, cuotas }),
     )
-  }, [tipo, eleccion, monto, fecha, nota, pago, tarjetaId, cuotas])
+  }, [tipo, eleccion, monto, nota, pago, tarjetaId, cuotas])
+
+  // Si la app quedó abierta de fondo y cambió el día, la fecha "hoy" se
+  // corre sola al volver al frente — pero solo si seguía en el hoy viejo:
+  // una fecha cambiada a mano (cargar un gasto de ayer) no se pisa.
+  const hoyVisto = useRef(hoy())
+  useEffect(() => {
+    const alVolver = () => {
+      if (document.visibilityState === 'hidden') return
+      const nuevoHoy = hoy()
+      if (nuevoHoy !== hoyVisto.current) {
+        setFecha((f) => (f === hoyVisto.current ? nuevoHoy : f))
+        hoyVisto.current = nuevoHoy
+      }
+    }
+    document.addEventListener('visibilitychange', alVolver)
+    window.addEventListener('focus', alVolver)
+    return () => {
+      document.removeEventListener('visibilitychange', alVolver)
+      window.removeEventListener('focus', alVolver)
+    }
+  }, [])
 
   // La cola se intenta vaciar al abrir y cada vez que vuelve la señal.
   useEffect(() => {
