@@ -23,6 +23,12 @@ export type Categoria = {
   activo: boolean
 }
 
+export type Tarjeta = {
+  id: number
+  nombre: string
+  activa: boolean
+}
+
 async function token(): Promise<string | null> {
   const { data } = await supabase.auth.getSession()
   return data.session?.access_token ?? null
@@ -38,6 +44,22 @@ export async function traerCategorias(): Promise<Categoria[] | null> {
       { headers: { apikey: CLAVE_PUBLICA, Authorization: `Bearer ${t}` } },
     )
     return r.ok ? ((await r.json()) as Categoria[]) : null
+  } catch {
+    return null
+  }
+}
+
+/** GET de las tarjetas. null si no hay red o el buzón aún no tiene la
+ *  tabla (el SQL de la fase 2 sin correr) — la app sigue sin modo tarjeta. */
+export async function traerTarjetas(): Promise<Tarjeta[] | null> {
+  const t = await token()
+  if (!t) return null
+  try {
+    const r = await fetch(
+      `${URL_BUZON}/rest/v1/tarjetas?select=id,nombre,activa&order=nombre`,
+      { headers: { apikey: CLAVE_PUBLICA, Authorization: `Bearer ${t}` } },
+    )
+    return r.ok ? ((await r.json()) as Tarjeta[]) : null
   } catch {
     return null
   }

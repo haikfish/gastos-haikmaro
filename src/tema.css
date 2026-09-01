@@ -66,7 +66,7 @@ body {
 .app {
   height: 100dvh;
   display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto auto 1fr auto;
   /* minmax(0,1fr) y no el implícito: sin esto, el ancho intrínseco del campo
      de monto (34px de fuente × el size por defecto de un input) infla la
      columna a 509px y la pantalla scrollea de costado. Medido, no teórico. */
@@ -320,3 +320,69 @@ footer {
 
 .version { font-size: 11px; color: var(--tinta2); }
 .version.centrada { text-align: center; margin-top: 8px; }
+
+
+/* ---- Pago: contado o tarjeta (fase tarjetas) ---- */
+
+.pago {
+  display: grid;
+  gap: 8px;
+  padding: 0 16px 10px;
+}
+
+.pago-opciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* La fila de pago pesa menos que la de tipo: botones más bajos. */
+.tipo.chico {
+  min-height: 40px;
+  font-size: 15px;
+}
+
+.tarjetas-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tarjeta-chip {
+  min-height: 40px;
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: white;
+  color: var(--tinta);
+  font: inherit;
+  font-size: 15px;
+  padding: 6px 14px;
+}
+
+.tarjeta-chip.elegida {
+  background: var(--dorado);
+  border-color: var(--dorado);
+  color: white;
+}
+
+.cuotas-etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--tinta2);
+  font-size: 14px;
+}
+
+.cuotas {
+  width: 64px;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: var(--hundido);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 16px; /* 16px: iOS no hace zoom automático */
+  padding: 8px;
+  text-align: center;
+}

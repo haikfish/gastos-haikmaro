@@ -75,3 +75,16 @@ describe('clasificar el resultado de subir', () => {
     expect(clasificar(400)).toBe('rechazado')
   })
 })
+
+describe('tarjeta en la cola', () => {
+  test('los campos de tarjeta sobreviven encolar y leer', () => {
+    const d = deposito()
+    encolar(d, { ...gasto('t1'), tarjeta_id: 2, cuotas: 6 })
+    encolar(d, gasto('t2')) // contado: sin las claves siquiera
+
+    const [conTarjeta, contado] = leerCola(d)
+    expect(conTarjeta.tarjeta_id).toBe(2)
+    expect(conTarjeta.cuotas).toBe(6)
+    expect('tarjeta_id' in contado).toBe(false)
+  })
+})

@@ -23,6 +23,11 @@ export type GastoEnCola = {
   /** Opcional: solo viaja si se escribió. JSON.stringify omite undefined, así
    *  que un buzón sin la columna ni se entera de que la app la conoce. */
   notas?: string
+  /** Pago con tarjeta: la computadora lo importa como PENDIENTE (con sus
+   *  cuotas) — no entra a los gastos del mes hasta pagar el resumen. Sin
+   *  estos campos, contado: el flujo de siempre, intacto. */
+  tarjeta_id?: number
+  cuotas?: number
 }
 
 export type Deposito = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
