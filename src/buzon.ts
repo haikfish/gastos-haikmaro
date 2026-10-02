@@ -124,3 +124,18 @@ export async function traerHistorial(limite = 60): Promise<FilaBuzon[] | null> {
     return null
   }
 }
+
+/** Las categorías de los últimos gastos del buzón (los dos teléfonos), para
+ *  ordenar por uso. null si no hay red. */
+export async function traerCategoriasUsadas(limite = 300): Promise<{ categoria_id: number | null }[] | null> {
+  const t = await token()
+  if (!t) return null
+  try {
+    const r = await fetch(`${URL_BUZON}/rest/v1/gastos?select=categoria_id&order=creado_en.desc&limit=${limite}`, {
+      headers: { apikey: CLAVE_PUBLICA, Authorization: `Bearer ${t}` },
+    })
+    return r.ok ? ((await r.json()) as { categoria_id: number | null }[]) : null
+  } catch {
+    return null
+  }
+}

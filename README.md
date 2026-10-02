@@ -16,6 +16,9 @@ Una pantalla: **tipo → categoría → monto → guardar**. La fecha es la de h
   se eligen; «Sin categoría» existe para el apuro y se asigna después, al
   importar.
 - La sesión persiste: se loguea una vez por teléfono.
+- **Las categorías van por uso** (v5): las más usadas arriba, contando los
+  últimos gastos del buzón (los dos teléfonos) más lo guardado en este
+  teléfono. A igual uso, por nombre. «Sin categoría» siempre primera.
 - **Historial** (v5): «¿lo anoté o no?». El botón `historial` muestra tres
   franjas: lo que sigue en el teléfono sin subir (esperando señal), lo que
   está en el buzón pendiente de bajar a la computadora, y lo último que ya

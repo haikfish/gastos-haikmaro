@@ -17,7 +17,8 @@ import type { Session } from '@supabase/supabase-js'
 import { clasificar, encolar, leerCola, sacarDeCola, type GastoEnCola } from './logica/cola'
 import { aNumero, conMiles } from './logica/dinero'
 import { armarHistorial, fechaCorta, haceCuanto, type Historial as HistorialArmado } from './logica/historial'
-import { subirGasto, supabase, traerCategorias, traerHistorial, traerTarjetas, type Categoria, type FilaBuzon, type Tarjeta } from './buzon'
+import { contarUsos, leerUsos, ordenarPorUso, registrarUso, sumarUsos, type Usos } from './logica/usos'
+import { subirGasto, supabase, traerCategorias, traerCategoriasUsadas, traerHistorial, traerTarjetas, type Categoria, type FilaBuzon, type Tarjeta } from './buzon'
 
 //: Sube con cada publicación. Está EN PANTALLA (header y login) porque la
 //: pregunta «¿te llegó la versión nueva?» no se puede responder de otra forma.
@@ -144,6 +145,10 @@ function Carga({ sesion }: { sesion: Session }) {
   // v5: la pantalla del historial («¿lo anoté o no?») reemplaza la de carga
   // mientras está abierta. Lo que había a medio tipear sigue en el borrador.
   const [pantalla, setPantalla] = useState<'carga' | 'historial'>('carga')
+  // v5: las categorías van por uso. Lo del buzón (compartido) se guarda en
+  // el teléfono; lo propio se suma en cada guardado.
+  const [usosBuzon, setUsosBuzon] = useState<Usos>(() => leerJson<Usos>('gastos-usos-buzon') ?? {})
+  const [usosLocales, setUsosLocales] = useState<Usos>(() => leerUsos(localStorage))
   const [aviso, setAviso] = useState<{ clase: 'ok' | 'cola' | 'error'; texto: string } | null>(null)
 
   // Las categorías: del buzón cuando hay red, de la copia local cuando no.
@@ -161,6 +166,16 @@ function Carga({ sesion }: { sesion: Session }) {
       if (!filas) return
       setTarjetas(filas)
       localStorage.setItem('gastos-tarjetas', JSON.stringify(filas))
+    })
+    // Los usos del buzón: al llegar, pisan la copia guardada y también lo
+    // sumado localmente (ya está contado ahí, si subió).
+    void traerCategoriasUsadas().then((filas) => {
+      if (!filas) return
+      const usos = contarUsos(filas)
+      setUsosBuzon(usos)
+      localStorage.setItem('gastos-usos-buzon', JSON.stringify(usos))
+      localStorage.removeItem('gastos-usos')
+      setUsosLocales({})
     })
   }, [])
 
@@ -237,6 +252,8 @@ function Carga({ sesion }: { sesion: Session }) {
 
     // A la cola PRIMERO: desde acá, pase lo que pase, el gasto existe.
     encolar(localStorage, gasto)
+    registrarUso(localStorage, eleccion)
+    setUsosLocales(leerUsos(localStorage))
     setPendientes(leerCola(localStorage).length)
 
     const nombre =
@@ -265,9 +282,11 @@ function Carga({ sesion }: { sesion: Session }) {
     )
   }
 
-  const visibles = categorias
-    .filter((c) => c.activo && c.tipo_gasto === tipo)
-    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+  // Las más usadas arriba (buzón + teléfono); a igual uso, por nombre.
+  const visibles = ordenarPorUso(
+    categorias.filter((c) => c.activo && c.tipo_gasto === tipo),
+    sumarUsos(usosBuzon, usosLocales),
+  )
   const tarjetasActivas = tarjetas.filter((t) => t.activa)
   const listo =
     aNumero(monto) !== null &&
