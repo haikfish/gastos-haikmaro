@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { clasificar, encolar, leerCola, sacarDeCola, type Deposito, type GastoEnCola } from './cola'
+import { clasificar, encolar, leerCola, sacarDeCola, type Deposito, type GastoEnCola, reemplazarEnCola } from './cola'
 
 function deposito(): Deposito {
   const datos = new Map<string, string>()
@@ -86,5 +86,17 @@ describe('tarjeta en la cola', () => {
     expect(conTarjeta.tarjeta_id).toBe(2)
     expect(conTarjeta.cuotas).toBe(6)
     expect('tarjeta_id' in contado).toBe(false)
+  })
+})
+
+describe('reemplazarEnCola', () => {
+  test('cambia el gasto en el lugar y avisa si ya no estaba', () => {
+    const d = deposito()
+    const g = { uuid: 'a', tipo_gasto: 'HAIKMARO' as const, categoria_id: 1, monto: 10, fecha: '2026-10-02' }
+    encolar(d, g)
+    expect(reemplazarEnCola(d, { ...g, monto: 99 })).toBe(true)
+    expect(leerCola(d)[0].monto).toBe(99)
+    expect(reemplazarEnCola(d, { ...g, uuid: 'otro' })).toBe(false)
+    expect(leerCola(d)).toHaveLength(1)
   })
 })

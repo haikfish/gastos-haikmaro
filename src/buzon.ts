@@ -139,3 +139,41 @@ export async function traerCategoriasUsadas(limite = 300): Promise<{ categoria_i
     return null
   }
 }
+
+/** Editar o borrar un gasto que TODAVÍA no bajó a la computadora (v6).
+ *
+ * El filtro `importado_en=is.null` va en la URL además de en las reglas del
+ * buzón: lo que ya bajó no se toca ni por error. Se pide la fila de vuelta
+ * para saber si de verdad cambió algo: con las reglas de la fase 3 sin
+ * correr, el buzón contesta 200 con cero filas, no un error. */
+export type ResultadoBuzon = 'ok' | 'no_cambio' | 'rechazado' | 'sin_red'
+
+async function cambiarGasto(uuid: string, metodo: 'PATCH' | 'DELETE', cuerpo?: object): Promise<ResultadoBuzon> {
+  const t = await token()
+  if (!t) return 'rechazado'
+  try {
+    const r = await fetch(`${URL_BUZON}/rest/v1/gastos?uuid=eq.${encodeURIComponent(uuid)}&importado_en=is.null`, {
+      method: metodo,
+      headers: {
+        apikey: CLAVE_PUBLICA,
+        Authorization: `Bearer ${t}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+    })
+    if (!r.ok) return 'rechazado'
+    const filas = (await r.json().catch(() => [])) as unknown[]
+    return Array.isArray(filas) && filas.length === 1 ? 'ok' : 'no_cambio'
+  } catch {
+    return 'sin_red'
+  }
+}
+
+export function editarGasto(uuid: string, cambios: object): Promise<ResultadoBuzon> {
+  return cambiarGasto(uuid, 'PATCH', cambios)
+}
+
+export function borrarGasto(uuid: string): Promise<ResultadoBuzon> {
+  return cambiarGasto(uuid, 'DELETE')
+}

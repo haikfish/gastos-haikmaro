@@ -71,3 +71,13 @@ export function clasificar(status: number | null, codigoPg?: string): Veredicto 
   if (status === 409 || codigoPg === '23505') return 'duplicado'
   return 'rechazado'
 }
+
+/** Edición de un gasto que todavía no subió (v6): se cambia en el lugar,
+ *  mismo uuid. Si ya no está en la cola (subió entre medio), no hace nada y
+ *  devuelve false: el que llama lo edita en el buzón. */
+export function reemplazarEnCola(deposito: Deposito, gasto: GastoEnCola): boolean {
+  const cola = leerCola(deposito)
+  if (!cola.some((g) => g.uuid === gasto.uuid)) return false
+  deposito.setItem(CLAVE, JSON.stringify(cola.map((g) => (g.uuid === gasto.uuid ? gasto : g))))
+  return true
+}

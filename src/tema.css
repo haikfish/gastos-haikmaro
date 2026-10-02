@@ -39,7 +39,16 @@
   --linea: #e8e0d4;
   --ok: #2e7d4f;
   --error: #b3402a;
+  /* v6: el verde del sistema de precios (abeto) para Haikmaro. El acento
+     sigue al universo elegido; fuera de la app (login) es el dorado. */
+  --verde: #0f2a22;
+  --verde-oscuro: #0b1f19;
+  --acento: var(--dorado);
+  --acento-oscuro: var(--dorado-oscuro);
 }
+
+.app.haikmaro { --acento: var(--verde); --acento-oscuro: var(--verde-oscuro); }
+.app.familia { --acento: var(--dorado); --acento-oscuro: var(--dorado-oscuro); }
 
 * { margin: 0; box-sizing: border-box; }
 
@@ -140,8 +149,8 @@ header {
 }
 
 .tipo.elegido {
-  background: var(--dorado);
-  border-color: var(--dorado);
+  background: var(--acento);
+  border-color: var(--acento);
   color: white;
 }
 
@@ -175,8 +184,8 @@ header {
 }
 
 .categoria.elegida {
-  background: var(--dorado);
-  border-color: var(--dorado);
+  background: var(--acento);
+  border-color: var(--acento);
   color: white;
   font-weight: 500;
 }
@@ -213,7 +222,7 @@ footer {
 }
 
 .nota::placeholder { color: var(--tinta2); }
-.nota:focus { outline: 2px solid var(--dorado); border-color: var(--dorado); }
+.nota:focus { outline: 2px solid var(--acento); border-color: var(--acento); }
 
 .monto-fila {
   display: flex;
@@ -237,7 +246,7 @@ footer {
   padding: 10px 14px;
 }
 
-.monto:focus { outline: 2px solid var(--dorado); border-color: var(--dorado); }
+.monto:focus { outline: 2px solid var(--acento); border-color: var(--acento); }
 
 .pesos { color: var(--tinta2); font-size: 15px; }
 
@@ -245,7 +254,7 @@ footer {
   min-height: 58px;
   border: none;
   border-radius: 12px;
-  background: var(--dorado);
+  background: var(--acento);
   color: white;
   font: inherit;
   font-size: 18px;
@@ -253,7 +262,7 @@ footer {
   letter-spacing: 0.06em;
 }
 
-.boton-guardar:active { background: var(--dorado-oscuro); }
+.boton-guardar:active { background: var(--acento-oscuro); }
 .boton-guardar:disabled { background: var(--linea); color: var(--tinta2); }
 
 /* ---- Avisos ---- */
@@ -269,14 +278,14 @@ footer {
   background: #edf6f0;
   color: var(--ok);
   /* Se va sola; el onAnimationEnd la saca del DOM. */
-  animation: desvanecer 3.5s forwards;
+  animation: desvanecer 6s forwards;
 }
 
 .aviso.cola { background: var(--hundido); color: var(--tinta); }
 .aviso.error { background: #fbeeea; color: var(--error); }
 
 @keyframes desvanecer {
-  0%, 75% { opacity: 1; }
+  0%, 85% { opacity: 1; }
   100% { opacity: 0; }
 }
 
@@ -361,8 +370,8 @@ footer {
 }
 
 .tarjeta-chip.elegida {
-  background: var(--dorado);
-  border-color: var(--dorado);
+  background: var(--acento);
+  border-color: var(--acento);
   color: white;
 }
 
@@ -407,7 +416,7 @@ footer {
   margin-left: 4px;
   padding: 0 5px;
   border-radius: 999px;
-  background: var(--dorado);
+  background: var(--acento);
   color: white;
   font-size: 11px;
   font-weight: 500;
@@ -491,3 +500,76 @@ header.dos-filas .acciones {
   gap: 8px;
 }
 header.dos-filas .fecha { flex: 1; min-width: 0; }
+
+
+/* ---- v6: buscador, edición, deshacer, color por universo en el historial ---- */
+
+.buscar {
+  grid-column: 1 / -1;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: white;
+  color: var(--tinta);
+  font: inherit;
+  font-size: 16px; /* 16px: iOS no hace zoom automático */
+  padding: 9px 12px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.buscar::placeholder { color: var(--tinta2); }
+.buscar:focus { outline: 2px solid var(--acento); border-color: var(--acento); }
+.categorias .nada { grid-column: 1 / -1; color: var(--tinta2); font-size: 14px; padding: 8px 2px; }
+
+/* Guardar deja una tarjeta con lo guardado y "Deshacer" (6 s). */
+.aviso.con-deshacer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aviso.con-deshacer span { flex: 1; }
+.deshacer {
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: white;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+.aviso.en-historial { margin: 8px 0 4px; }
+
+/* Corrigiendo un gasto pendiente: el pie lo dice y ofrece borrar. */
+.borrar {
+  border: none;
+  background: none;
+  color: var(--error);
+  font: inherit;
+  font-size: 14px;
+  padding: 4px;
+  text-align: center;
+}
+.app.editando footer { border-top: 2px solid var(--acento); }
+
+/* Historial: una franja de color por universo a la izquierda, y lo
+   pendiente se toca (es un botón) con una flecha al final. */
+.linea { border-left: 3px solid transparent; padding-left: 8px; }
+.linea.haikmaro { border-left-color: var(--verde); }
+.linea.familiar { border-left-color: var(--dorado); }
+.linea.bajado { border-left-color: var(--linea); }
+.linea.tocable {
+  width: 100%;
+  grid-template-columns: auto 1fr auto auto;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  border-top: none;
+  border-right: none;
+}
+.linea .flecha { color: var(--tinta2); font-size: 18px; line-height: 1; }
+.linea.tocable:active { background: var(--hundido); }

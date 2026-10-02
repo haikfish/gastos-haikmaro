@@ -19,6 +19,18 @@ Una pantalla: **tipo → categoría → monto → guardar**. La fecha es la de h
 - **Las categorías van por uso** (v5): las más usadas arriba, contando los
   últimos gastos del buzón (los dos teléfonos) más lo guardado en este
   teléfono. A igual uso, por nombre. «Sin categoría» siempre primera.
+- **El color sigue al universo** (v6): Haikmaro en el verde del sistema de
+  precios, Familia en dorado. Botones elegidos, GUARDAR y la franja de cada
+  línea del historial lo llevan: un vistazo y se sabe dónde se está parado.
+- **Buscar categoría escribiendo** (v6): una franja arriba de la grilla,
+  sin acentos ni mayúsculas, con que las letras estén en cualquier parte.
+- **Corregir y borrar lo pendiente** (v6): en el historial, lo que todavía
+  no bajó a la computadora se toca y se abre en el formulario; GUARDAR
+  CAMBIOS lo cambia en el teléfono (si no subió) o en el buzón; "borrar este
+  gasto" lo saca. Lo que ya bajó no se toca desde acá. Requiere las reglas
+  de `supabase/fase3-editar.sql` en el buzón; sin ellas, la app lo dice.
+- **Deshacer** (v6): al guardar, la tarjeta de confirmación muestra el
+  gasto completo y un botón "Deshacer" durante seis segundos.
 - **Historial** (v5): «¿lo anoté o no?». El botón `historial` muestra tres
   franjas: lo que sigue en el teléfono sin subir (esperando señal), lo que
   está en el buzón pendiente de bajar a la computadora, y lo último que ya
@@ -48,6 +60,7 @@ contabilidad.
 | `src/logica/` | dinero, cola offline e historial, puras y testeadas |
 | `public/sw.js` | el service worker: la app abre sin señal |
 | `supabase/fase1-buzon.sql` | las tablas y permisos del buzón, tal como se crearon |
+| `supabase/fase3-editar.sql` | las reglas para corregir y borrar lo pendiente desde el celular |
 
 La estética es la del sistema de precios: dorado `#cc9966`, marfil `#fdfaf6`,
 Cormorant Garamond para la marca, Inter para lo funcional. Las fuentes van
