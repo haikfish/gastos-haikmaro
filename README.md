@@ -16,6 +16,11 @@ Una pantalla: **tipo → categoría → monto → guardar**. La fecha es la de h
   se eligen; «Sin categoría» existe para el apuro y se asigna después, al
   importar.
 - La sesión persiste: se loguea una vez por teléfono.
+- **Historial** (v5): «¿lo anoté o no?». El botón `historial` muestra tres
+  franjas: lo que sigue en el teléfono sin subir (esperando señal), lo que
+  está en el buzón pendiente de bajar a la computadora, y lo último que ya
+  bajó (en gris, con el día en que bajó). Sin señal muestra la última copia
+  guardada y dice de cuándo es. Solo lectura: acá no se edita ni se borra.
 
 ## Correr en desarrollo
 
@@ -37,7 +42,7 @@ contabilidad.
 |---|---|
 | `src/App.tsx` | la pantalla única, login incluido |
 | `src/buzon.ts` | Supabase: auth por supabase-js, datos por fetch pelado |
-| `src/logica/` | dinero y cola offline, puras y testeadas |
+| `src/logica/` | dinero, cola offline e historial, puras y testeadas |
 | `public/sw.js` | el service worker: la app abre sin señal |
 | `supabase/fase1-buzon.sql` | las tablas y permisos del buzón, tal como se crearon |
 

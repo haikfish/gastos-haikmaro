@@ -89,3 +89,38 @@ export async function subirGasto(
     return { status: null }
   }
 }
+
+/** El historial: las últimas filas del buzón, pendientes e importadas,
+ *  lo más nuevo primero. null si no hay red (la app muestra la copia
+ *  guardada). Las reglas del buzón dejan leer a cualquier logueado. */
+export type FilaBuzon = {
+  uuid: string
+  tipo_gasto: 'HAIKMARO' | 'FAMILIAR'
+  categoria_id: number | null
+  monto: number | string
+  fecha: string
+  notas?: string | null
+  cargado_por: string
+  creado_en: string
+  importado_en: string | null
+  tarjeta_id?: number | null
+  cuotas?: number | null
+}
+
+export async function traerHistorial(limite = 60): Promise<FilaBuzon[] | null> {
+  const t = await token()
+  if (!t) return null
+  const campos = 'uuid,tipo_gasto,categoria_id,monto,fecha,notas,cargado_por,creado_en,importado_en,tarjeta_id,cuotas'
+  const pedir = (select: string) =>
+    fetch(`${URL_BUZON}/rest/v1/gastos?select=${select}&order=creado_en.desc&limit=${limite}`, {
+      headers: { apikey: CLAVE_PUBLICA, Authorization: `Bearer ${t}` },
+    })
+  try {
+    let r = await pedir(campos)
+    // Buzón sin las columnas de tarjeta (SQL fase 2 sin correr): se pide sin ellas.
+    if (r.status === 400) r = await pedir('uuid,tipo_gasto,categoria_id,monto,fecha,notas,cargado_por,creado_en,importado_en')
+    return r.ok ? ((await r.json()) as FilaBuzon[]) : null
+  } catch {
+    return null
+  }
+}

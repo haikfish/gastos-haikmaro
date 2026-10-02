@@ -16,11 +16,12 @@ import type { Session } from '@supabase/supabase-js'
 
 import { clasificar, encolar, leerCola, sacarDeCola, type GastoEnCola } from './logica/cola'
 import { aNumero, conMiles } from './logica/dinero'
-import { subirGasto, supabase, traerCategorias, traerTarjetas, type Categoria, type Tarjeta } from './buzon'
+import { armarHistorial, fechaCorta, haceCuanto, type Historial as HistorialArmado } from './logica/historial'
+import { subirGasto, supabase, traerCategorias, traerHistorial, traerTarjetas, type Categoria, type FilaBuzon, type Tarjeta } from './buzon'
 
 //: Sube con cada publicación. Está EN PANTALLA (header y login) porque la
 //: pregunta «¿te llegó la versión nueva?» no se puede responder de otra forma.
-const VERSION = 'v4'
+const VERSION = 'v5'
 
 type Tipo = 'HAIKMARO' | 'FAMILIAR'
 type Pago = 'CONTADO' | 'TARJETA'
@@ -52,7 +53,7 @@ export function App() {
   }, [])
 
   if (cargandoSesion) return null
-  return sesion ? <Carga /> : <Entrar />
+  return sesion ? <Carga sesion={sesion} /> : <Entrar />
 }
 
 // --- Login --------------------------------------------------------------------
@@ -117,7 +118,7 @@ type Borrador = {
 }
 type CategoriasGuardadas = { filas: Categoria[]; el: string }
 
-function Carga() {
+function Carga({ sesion }: { sesion: Session }) {
   const borradorInicial = useRef(leerJson<Borrador>('gastos-borrador')).current
   const [tipo, setTipo] = useState<Tipo>(borradorInicial?.tipo ?? 'HAIKMARO')
   const [eleccion, setEleccion] = useState<Eleccion>(borradorInicial?.eleccion)
@@ -140,6 +141,9 @@ function Carga() {
   const [categoriasDe, setCategoriasDe] = useState<string | null>(guardadas?.el ?? null)
 
   const [pendientes, setPendientes] = useState(() => leerCola(localStorage).length)
+  // v5: la pantalla del historial («¿lo anoté o no?») reemplaza la de carga
+  // mientras está abierta. Lo que había a medio tipear sigue en el borrador.
+  const [pantalla, setPantalla] = useState<'carga' | 'historial'>('carga')
   const [aviso, setAviso] = useState<{ clase: 'ok' | 'cola' | 'error'; texto: string } | null>(null)
 
   // Las categorías: del buzón cuando hay red, de la copia local cuando no.
@@ -271,24 +275,48 @@ function Carga() {
     eleccion !== undefined &&
     (pago === 'CONTADO' || tarjetaId !== null)
 
+  if (pantalla === 'historial') {
+    return (
+      <div className="app en-historial">
+        <header>
+          <span className="marca">
+            Haikmaro <small>HISTORIAL</small>
+          </span>
+          <button type="button" className="historial-boton" onClick={() => setPantalla('carga')}>
+            ← cargar
+          </button>
+          <span className="version">{VERSION}</span>
+        </header>
+        <Historial categorias={categorias} tarjetas={tarjetas} mio={sesion.user.email ?? null} />
+      </div>
+    )
+  }
+
   return (
     <div className="app">
-      <header>
+      {/* v5: dos filas. Con el botón de historial, una sola fila no entra en
+          un teléfono de 390 px: la fecha y las acciones van debajo de la marca. */}
+      <header className="dos-filas">
         <span className="marca">
           Haikmaro <small>GASTOS</small>
         </span>
-        <input
-          type="date"
-          className="fecha"
-          value={fecha}
-          max={hoy()}
-          onChange={(e) => setFecha(e.target.value || hoy())}
-          aria-label="Fecha del gasto"
-        />
-        <button type="button" className="salir" onClick={() => void supabase.auth.signOut()}>
-          salir
-        </button>
         <span className="version">{VERSION}</span>
+        <div className="acciones">
+          <input
+            type="date"
+            className="fecha"
+            value={fecha}
+            max={hoy()}
+            onChange={(e) => setFecha(e.target.value || hoy())}
+            aria-label="Fecha del gasto"
+          />
+          <button type="button" className="historial-boton" onClick={() => setPantalla('historial')} aria-label="Ver el historial">
+            historial{pendientes > 0 && <span className="cuenta">{pendientes}</span>}
+          </button>
+          <button type="button" className="salir" onClick={() => void supabase.auth.signOut()}>
+            salir
+          </button>
+        </div>
       </header>
 
       <div className="tipos">
@@ -414,6 +442,96 @@ function Carga() {
           GUARDAR
         </button>
       </footer>
+    </div>
+  )
+}
+
+
+// --- El historial: «¿lo anoté o no?» -------------------------------------------
+
+type HistorialGuardado = { filas: FilaBuzon[]; el: string }
+
+/** Tres franjas: lo que sigue en el teléfono sin subir, lo que está en el
+ *  buzón esperando que la computadora lo baje, y lo último que ya bajó. Con
+ *  señal se trae del buzón; sin señal se muestra la última copia guardada,
+ *  diciendo de cuándo es. La cola local se lee siempre: está en el teléfono. */
+function Historial({ categorias, tarjetas, mio }: { categorias: Categoria[]; tarjetas: Tarjeta[]; mio: string | null }) {
+  const guardado = useRef(leerJson<HistorialGuardado>('gastos-historial')).current
+  const [filas, setFilas] = useState<FilaBuzon[] | null>(guardado?.filas ?? null)
+  const [de, setDe] = useState<string | null>(guardado?.el ?? null)
+  const [red, setRed] = useState<'cargando' | 'ok' | 'sin_red'>('cargando')
+
+  useEffect(() => {
+    let vivo = true
+    void traerHistorial().then((nuevas) => {
+      if (!vivo) return
+      if (!nuevas) {
+        setRed('sin_red')
+        return
+      }
+      const el = new Date().toISOString()
+      setFilas(nuevas)
+      setDe(el)
+      setRed('ok')
+      localStorage.setItem('gastos-historial', JSON.stringify({ filas: nuevas, el }))
+    })
+    return () => {
+      vivo = false
+    }
+  }, [])
+
+  const h: HistorialArmado = armarHistorial(leerCola(localStorage), filas ?? [], categorias, tarjetas, mio)
+  const nada = h.sinSubir.length === 0 && h.pendientes.length === 0 && h.bajados.length === 0
+
+  return (
+    <div className="historial">
+      {h.sinSubir.length > 0 && (
+        <>
+          <h2>
+            En el teléfono, sin subir<small>esperando señal · se suben solos</small>
+          </h2>
+          {h.sinSubir.map((l) => (
+            <Fila key={l.uuid} l={l} />
+          ))}
+        </>
+      )}
+      <h2>
+        Pendientes de bajar a la compu<small>{h.pendientes.length === 0 ? 'nada pendiente' : `${h.pendientes.length}`}</small>
+      </h2>
+      {h.pendientes.length === 0 && filas !== null && <p className="vacio">La computadora ya bajó todo lo que estaba en el buzón.</p>}
+      {h.pendientes.map((l) => (
+        <Fila key={l.uuid} l={l} />
+      ))}
+      {h.bajados.length > 0 && (
+        <>
+          <h2>
+            Ya en la computadora<small>los últimos {h.bajados.length}</small>
+          </h2>
+          {h.bajados.map((l) => (
+            <Fila key={l.uuid} l={l} />
+          ))}
+        </>
+      )}
+      {nada && filas === null && red === 'sin_red' && <p className="vacio">Sin señal y sin copia guardada: abrilo una vez con señal.</p>}
+      {red === 'cargando' && <p className="estado-red">Actualizando…</p>}
+      {red === 'sin_red' && de && <p className="estado-red">Sin señal: lo que se ve es de {haceCuanto(de, new Date())}.</p>}
+      {red === 'ok' && <p className="estado-red">Al día con el buzón.</p>}
+    </div>
+  )
+}
+
+function Fila({ l }: { l: HistorialArmado['pendientes'][number] }) {
+  return (
+    <div className={`linea ${l.estado === 'sin_subir' ? 'sin-subir' : l.estado}${l.tipo === 'FAMILIAR' ? ' familiar' : ''}`}>
+      <span className="dia">{fechaCorta(l.fecha)}</span>
+      <span className="que">
+        {l.categoria}
+        {l.detalle && <small>{l.detalle}</small>}
+        {l.estado === 'bajado' && l.bajadoEl && <small>bajó el {fechaCorta(l.bajadoEl)}</small>}
+      </span>
+      <span className="cuanto">
+        {l.monto} <small>$</small>
+      </span>
     </div>
   )
 }
